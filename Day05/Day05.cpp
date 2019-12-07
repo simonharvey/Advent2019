@@ -12,6 +12,7 @@
 #include <queue>
 #include <future>
 #include "Queue.h"
+#include <chrono>
 
 using namespace std;
 
@@ -49,9 +50,11 @@ enum class Mode
 	Immediate = 1,
 };
 
+#pragma warning(push)
+#pragma warning(disable:26451)
 class CPU
 {
-	uint32_t pc = 0;
+	int64_t pc = 0;
 
 public:
 
@@ -80,7 +83,7 @@ public:
 			}
 			case OpCode::Input:
 			{
-				int value = input();
+				auto value = input();
 				data[data[pc+1]] = value;
 				pc += 2;
 				break;
@@ -145,7 +148,7 @@ public:
 
 private:
 
-	int64_t& GetValue(data_t& data, int pc, int paramIdx)
+	int64_t& GetValue(data_t& data, int64_t pc, int paramIdx)
 	{
 		auto instr = data[pc++];
 		for (int i = 0; i < paramIdx + 2; ++i)
@@ -165,6 +168,8 @@ private:
 		}
 	}
 };
+
+#pragma warning(pop)
 
 data_t Tokenize(const string& input)
 {
@@ -233,6 +238,8 @@ int64_t Day7(const data_t& data)
 
 int64_t Day7_2(const data_t& data)
 {
+	using namespace std::chrono_literals;
+
 	std::vector<int> v = { 5, 6, 7, 8, 9 };
 	int64_t max = std::numeric_limits<int64_t>().min();
 
@@ -252,6 +259,7 @@ int64_t Day7_2(const data_t& data)
 					[&]() { return inputQueue[i].pop(); },
 					[&](int64_t v) 
 					{ 
+						//std::this_thread::sleep_for(.01s);
 						inputQueue[(i+1)%5].push(v); 
 					}
 				);
