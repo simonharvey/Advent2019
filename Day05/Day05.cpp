@@ -52,19 +52,8 @@ enum class Mode
 class CPU
 {
 	uint32_t pc = 0;
-	Queue<uint64_t> inputQueue;
 
 public:
-
-	int64_t ReadInput()
-	{
-		return inputQueue.pop();
-	}
-
-	void SendInput(int64_t v)
-	{
-		inputQueue.push(v);
-	}
 
 	void Execute(data_t& data, std::function<int64_t()> input = std_input, std::function<void(int64_t)> output = std_output)
 	{
@@ -250,33 +239,33 @@ int64_t Day7_2(const data_t& data)
 	do
 	{
 		CPU amps[5];
+		Queue<int64_t> inputQueue[5];
 		thread threads[5];
 
 		for (int i=0; i<5; ++i)
 		{
 			CPU &cpu = amps[i];
-			cpu.SendInput(v[i]);
+			inputQueue[i].push(v[i]);
 			threads[i] = thread([&, i]() {
 				auto datac = data_t(data);
 				cpu.Execute(datac,
-					[&]() { return cpu.ReadInput(); },
+					[&]() { return inputQueue[i].pop(); },
 					[&](int64_t v) 
 					{ 
-						//cout << "SendInput " << v << " to " << (i + 1) % 5 << '\n';
-						amps[(i+1)%5].SendInput(v); 
+						inputQueue[(i+1)%5].push(v); 
 					}
 				);
 			});
 		}
 
-		amps[0].SendInput(0);
+		inputQueue[0].push(0);
 
 		for (int i = 0; i < 5; ++i)
 		{
 			threads[i].join();
 		}
 
-		auto output = amps[0].ReadInput();
+		auto output = inputQueue[0].pop();
 		if (output > max)
 		{
 			max = output;
