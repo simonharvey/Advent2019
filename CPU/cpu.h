@@ -21,6 +21,7 @@ namespace cpu
 		JIF = 6,
 		Less = 7,
 		Equals = 8,
+		RelBase = 9,
 		Halt = 99,
 	};
 
@@ -28,6 +29,7 @@ namespace cpu
 	{
 		Position = 0,
 		Immediate = 1,
+		Relative = 2,
 	};
 
 	int64_t std_input()
@@ -40,7 +42,7 @@ namespace cpu
 
 	void std_output(int64_t value)
 	{
-		cout << "Output: " << value << '\n';
+		cout << "Output:" << value << '\n';
 	}
 
 #pragma warning(push)
@@ -49,6 +51,7 @@ namespace cpu
 	class CPU
 	{
 		int64_t pc = 0;
+		int64_t relBase = 0;
 
 	public:
 
@@ -78,7 +81,7 @@ namespace cpu
 				case OpCode::Input:
 				{
 					auto value = input();
-					data[data[pc + 1]] = value;
+					param(0) = value;
 					pc += 2;
 					break;
 				}
@@ -91,25 +94,17 @@ namespace cpu
 				case OpCode::JIT:
 				{
 					if (param(0) != 0)
-					{
 						pc = param(1);
-					}
 					else
-					{
 						pc += 3;
-					}
 					break;
 				}
 				case OpCode::JIF:
 				{
 					if (param(0) == 0)
-					{
 						pc = param(1);
-					}
 					else
-					{
 						pc += 3;
-					}
 					break;
 				}
 				case OpCode::Less:
@@ -122,6 +117,12 @@ namespace cpu
 				{
 					param(2) = param(0) == param(1) ? 1 : 0;
 					pc += 4;
+					break;
+				}
+				case OpCode::RelBase:
+				{
+					relBase += param(0);
+					pc += 2;
 					break;
 				}
 				case OpCode::Halt:
@@ -155,6 +156,8 @@ namespace cpu
 				break;
 			case Mode::Immediate: return data.at(pc + paramIdx);
 				break;
+			case Mode::Relative: return data.at(relBase + data[pc + paramIdx]);
+				break;
 			default:
 				throw exception("Invalid mode");
 				break;
@@ -171,7 +174,7 @@ namespace cpu
 		string tokenStr;
 		while (std::getline(tokenStream, tokenStr, ','))
 		{
-			result.push_back(stol(tokenStr));
+			result.push_back(stoll(tokenStr));
 		}
 		return result;
 	}
